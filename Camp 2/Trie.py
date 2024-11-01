@@ -208,3 +208,175 @@ if __name__ == "__main__":
     print("Good Job!")
 
 """
+# -------------------------------------------------------------------------------
+# BINARY TRIE (RADIX TREE)
+
+# FROM CHATPGT (DSA) 01-11-2024
+"""
+class TrieNode:
+    def __init__(self):
+        self.left = None  # Represents '0' bit
+        self.right = None  # Represents '1' bit
+
+class BinaryTrie:
+    def __init__(self):
+        self.root = TrieNode()
+
+    # Insert a number into the binary trie
+    def insert(self, num):
+        node = self.root
+        # Traverse the bits of the number from the most significant to the least significant
+        for i in range(31, -1, -1):  # 32-bit integer representation
+            bit = (num >> i) & 1  # Extract the ith bit from the left
+            if bit == 0:
+                if not node.left:
+                    node.left = TrieNode()
+                node = node.left
+            else:
+                if not node.right:
+                    node.right = TrieNode()
+                node = node.right
+
+    # Search if a number exists in the trie
+    def search(self, num):
+        node = self.root
+        for i in range(31, -1, -1):
+            bit = (num >> i) & 1
+            if bit == 0:
+                if not node.left:
+                    return False
+                node = node.left
+            else:
+                if not node.right:
+                    return False
+                node = node.right
+        return True
+
+    # Find the maximum XOR for a given number with any number in the trie
+    def find_max_xor(self, num):
+        node = self.root
+        max_xor = 0
+        for i in range(31, -1, -1):
+            bit = (num >> i) & 1
+            # Try to go opposite to maximize the XOR
+            if bit == 0:
+                if node.right:  # If we can go to '1'
+                    max_xor |= (1 << i)  # Set the ith bit of result to 1
+                    node = node.right
+                else:
+                    node = node.left
+            else:
+                if node.left:  # If we can go to '0'
+                    max_xor |= (1 << i)  # Set the ith bit of result to 1
+                    node = node.left
+                else:
+                    node = node.right
+        return max_xor
+
+        
+    # Find the minimum XOR for a given number with any number in the trie
+    def find_min_xor(self, num):
+        node = self.root
+        min_xor = 0
+        for i in range(31, -1, -1):
+            bit = (num >> i) & 1
+            # Try to follow the same path to minimize the XOR
+            if bit == 0:
+                if node.left:  # If we can go to '0'
+                    node = node.left
+                else:
+                    min_xor |= (1 << i)  # Set the ith bit of result to 1
+                    node = node.right
+            else:
+                if node.right:  # If we can go to '1'
+                    node = node.right
+                else:
+                    min_xor |= (1 << i)  # Set the ith bit of result to 1
+                    node = node.left
+        return min_xor
+
+        
+# Example usage:
+trie = BinaryTrie()
+nums = [5, 9, 25]  # Binary representations: 5 -> 0101, 9 -> 1001, 25 -> 11001
+for num in nums:
+    trie.insert(num)
+
+print("Searching for 5:", trie.search(5))  # True
+print("Searching for 15:", trie.search(15))  # False
+
+# Find the maximum XOR of 5 with any number in the trie
+print("Max XOR with 5:", trie.find_max_xor(5))  # Should return 25 XOR 5 = 28
+"""
+
+# PERSONAL REFACTORING OF CHATGPT IMPLEMENTATION 
+# https://leetcode.com/problems/maximum-xor-of-two-numbers-in-an-array/submissions/1440180425/
+"""
+class TrieNode:
+    def __init__(self):
+        self.left = None # Represents '0' bit.
+        self.right = None # Represents '1' bit.
+
+class Solution:
+    def __init__(self):
+        self.root = TrieNode()
+
+    def insert(self, num):
+        current = self.root
+
+        binary = bin(num)[2:]
+        binary_32 = ('0' * (32 - len(binary))) + binary
+
+        for bit in binary_32:
+            if bit == '0':
+                if not current.left:
+                    current.left = TrieNode()
+                current = current.left
+
+            if bit == '1':
+                if not current.right:
+                    current.right = TrieNode()
+                current = current.right
+
+    def find_max_xor(self, num):
+        current = self.root
+
+        binary = bin(num)[2:]
+        binary_32 = ('0' * (32 - len(binary))) + binary
+        max_xor = ['0'] * 32
+        i = 0
+        for bit in binary_32:
+
+            # We would try to go the opposite direction to maximize the XOR
+            if bit == '0':
+                if current.right: # If we can go to 1
+                    max_xor[i] = '1' # Set the ith bit to 1
+                    current = current.right
+
+                else:
+                    current = current.left
+
+            else:
+                if current.left: # If we can to 0
+                    max_xor[i] = '1' # Set the ith bit to 1
+                    current = current.left
+
+                else:
+                    current = current.right
+
+            i += 1
+            
+        return int(''.join(max_xor), 2)
+
+
+    def findMaximumXOR(self, nums: List[int]) -> int:
+        nums = list(set(nums))
+        maxi = 0
+        for num in nums:
+            self.insert(num)
+
+        for num in nums:
+            maxi = max(self.find_max_xor(num), maxi)
+
+        return maxi
+"""
